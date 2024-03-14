@@ -40,6 +40,7 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.net.URLEncoder
 import java.util.Calendar
 
 
@@ -48,7 +49,7 @@ class SplashActivity : AppCompatActivity() {
     lateinit var binding: ActivitySplashBinding
     private lateinit var firebaseAuth : FirebaseAuth
     private val PERMISSION_REQUEST_CODE = 5000
-
+    // TODO 매니저님이 짜준 로직 대로, JSON, METHOD 바꿔야함
     @RequiresApi(Build.VERSION_CODES.O)
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -61,8 +62,6 @@ class SplashActivity : AppCompatActivity() {
             // ----- API 초기화 시작 -----
             NaverIdLoginSDK.initialize(this, getString(R.string.naver_client_id), getString(R.string.naver_client_secret), "Multi Home Gym")
             KakaoSdk.init(this, getString(R.string.kakao_client_id))
-
-
             firebaseAuth = Firebase.auth
 
             val googleUserExist = firebaseAuth.currentUser
@@ -124,11 +123,12 @@ class SplashActivity : AppCompatActivity() {
                             val responseBody = response.body?.string()
                             val jsonObj__ = responseBody?.let { JSONObject(it) }
                             val jsonObj = jsonObj__?.getJSONObject("response")
-                            val user_id = jsonObj?.getString("id")
-                            val JsonObj = JSONObject()
-                            JsonObj.put("user_id", user_id)
-                            fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), JsonObj.getString("user_id")) {
-                                MainInit()
+                            // -----! 전화번호 변환 !-----
+                            val naver_mobile = URLEncoder.encode(jsonObj?.getString("mobile")?.replaceFirst("010", "+82 10"), "UTF-8")
+                            if (naver_mobile != null) {
+                                fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), naver_mobile, false) {
+                                    MainInit()
+                                }
                             }
                         }
                     }
@@ -142,8 +142,8 @@ class SplashActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val JsonObj = JSONObject()
-                            JsonObj.put("user_id", user.uid)
-                            fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), JsonObj.getString("user_id")) {
+                            JsonObj.put("google_login_id", user.uid)
+                            fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), JsonObj.getString("google_login_id"), true) {
                                 MainInit()
                             }
                         }
@@ -159,8 +159,9 @@ class SplashActivity : AppCompatActivity() {
                     else if (user != null) {
                         Log.i(TAG, "사용자 정보 요청 성공" + "\n회원번호: ${user.id}")
                         val JsonObj = JSONObject()
-                        JsonObj.put("user_id", user.id)
-                        fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), JsonObj.getString("user_id")) {
+                        val kakao_mobile = URLEncoder.encode(user.kakaoAccount?.phoneNumber.toString(), "UTF-8")
+                        JsonObj.put("user_mobile", kakao_mobile)
+                        fetchSELECTJson(getString(R.string.IP_ADDRESS_T_USER), JsonObj.getString("user_mobile"), false) {
                             MainInit()
                         }
                     }
@@ -246,10 +247,10 @@ class SplashActivity : AppCompatActivity() {
     }
     // ----- 알림에 대한 함수들 끝 -----
 
-    fun fetchSELECTJson(myUrl : String, user_id:String, callback: () -> Unit){
+    fun fetchSELECTJson(myUrl : String, identifier:String, isGoogleId: Boolean ,callback: () -> Unit){
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("${myUrl}read.php?user_id=$user_id")
+            .url(if (isGoogleId) "${myUrl}read.php?google_login_id=$identifier" else "${myUrl}read.php?user_mobile=$identifier")
             .get()
             .build()
 
@@ -261,7 +262,7 @@ class SplashActivity : AppCompatActivity() {
                 val responseBody = response.body?.string()
                 Log.e("OKHTTP3", "Success to execute request!: $responseBody")
                 val jsonObj__ = responseBody?.let { JSONObject(it) }
-                val jsonObj = jsonObj__?.getJSONObject("data")
+                val jsonObj = jsonObj__?.optJSONObject("data")
                 val t_userInstance =  Singleton_t_user.getInstance(baseContext)
                 t_userInstance.jsonObject = jsonObj
                 Log.e("OKHTTP3>싱글톤", "${t_userInstance.jsonObject}")

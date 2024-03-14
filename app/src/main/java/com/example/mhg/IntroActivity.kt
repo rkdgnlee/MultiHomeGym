@@ -27,9 +27,15 @@ class IntroActivity : AppCompatActivity() {
         viewPager.adapter = IntroViewPagerAdapter(this)
         binding.diIntro.attachTo(viewPager)
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            private var lastPosition = 0
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                binding.diIntro.isInvisible = (position == 2)
+                if (lastPosition ==2 && position ==3) {
+                    viewPager.currentItem = lastPosition
+                } else {
+                    lastPosition = position
+                    binding.diIntro.isInvisible = (position == 2)
+                }
             }
         })
     }

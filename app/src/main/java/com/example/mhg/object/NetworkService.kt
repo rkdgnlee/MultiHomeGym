@@ -9,12 +9,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
-import org.json.JSONObject
 import java.io.IOException
 
 object NetworkService{
-    private val client = OkHttpClient()
-
+    // TODO 매니저님이 짜준 로직 대로, JSON, METHOD 바꿔야함
     fun fetchINSERTJson(myUrl : String, json: String, callback: () -> Unit){
         val client = OkHttpClient()
         val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json)
@@ -34,11 +32,11 @@ object NetworkService{
             }
         })
     }
-    fun fetchUPDATEJson(myUrl : String, json: String, user_id:String, callback: () -> Unit) {
+    fun fetchUPDATEJson(myUrl : String, json: String, user_mobile:String, callback: () -> Unit) {
         val client = OkHttpClient()
         val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json)
         val request = Request.Builder()
-            .url("${myUrl}update.php?user_id=$user_id")
+            .url("${myUrl}update.php?user_mobile=$user_mobile")
             .patch(body)
             .build()
         client.newCall(request).enqueue(object : Callback {
@@ -54,10 +52,10 @@ object NetworkService{
         })
     }
 
-    fun fetchDeleteJson(myUrl : String, user_id:String, callback: () -> Unit) {
+    fun fetchDeleteJson(myUrl : String, user_mobile:String, callback: () -> Unit) {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("${myUrl}delete.php?user_id=$user_id")
+            .url("${myUrl}delete.php?user_mobile=$user_mobile")
             .delete()
             .build()
         client.newCall(request).enqueue(object : Callback {
