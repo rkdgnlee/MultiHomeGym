@@ -2,32 +2,42 @@ package com.example.mhg
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebViewClient
+import androidx.activity.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mhg.Adapter.HomeVerticalRecyclerViewAdapter
 import com.example.mhg.VO.ChartVO
 import com.example.mhg.VO.HomeRVBeginnerDataClass
+import com.example.mhg.VO.UserViewModel
 import com.example.mhg.databinding.FragmentReportSkeletonBinding
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
 import java.util.Calendar
 import java.util.TimeZone
+import kotlin.random.Random
 
 class ReportSkeletonFragment : Fragment() {
     lateinit var binding : FragmentReportSkeletonBinding
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
-
+    val viewModel: UserViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -59,10 +69,24 @@ class ReportSkeletonFragment : Fragment() {
         binding.tvReportDateCurrent.text = selectedDate
 
 
-        val datePickerDialog = DatePickerDialog(requireContext(), R.style.Theme_App, { view, year, month, day ->
-            selectedDate = "$year. ${month + 1}. $day"
-            binding.tvReportDateCurrent.text = selectedDate
-            c.set(year, month, day)
+        val datePickerDialog = DatePickerDialog(requireContext(), R.style.Theme_App,
+            { view, year, month, day ->
+
+                selectedDate = "$year. ${month + 1}. $day"
+                binding.tvReportDateCurrent.text = selectedDate
+                c.set(year, month, day)
+
+                // -----! 날짜 선택 후 서버 응답 후 처리 시작 !-----
+                // TODO 1.날짜형식 알맞게 수정하기
+                val fetchDate = "$year-${month + 1}-$day"
+                // TODO 2. 매니저님과 조율하여 매개변수 넣어서 조회
+//                fetchUserHistoryJson() {
+//                TODO 3. 데이터 값 전부 뿌리기 - viewModel.UserHistory.value?.optString("")
+//                }
+
+
+
+            // -----! 날짜 선택 후 서버 응답 후 처리 끝 !-----
         }, year, month, day)
 
         binding.btnReportCalendar.setOnClickListener {
@@ -73,7 +97,7 @@ class ReportSkeletonFragment : Fragment() {
         binding.btnReportDateLeft.setOnClickListener {
             c.add(Calendar.DAY_OF_MONTH, -1) // 하루를 빼기
             year = c.get(Calendar.YEAR)
-            month = c.get(Calendar.MONTH)
+            month = c.get(Calendar.MONTH)+1
             day = c.get(Calendar.DAY_OF_MONTH)
             selectedDate = "$year. ${month + 1}. $day"
             binding.tvReportDateCurrent.text = selectedDate
@@ -84,7 +108,7 @@ class ReportSkeletonFragment : Fragment() {
             if (!c.after(today)) {
                  // 하루 더하기
                 year = c.get(Calendar.YEAR)
-                month = c.get(Calendar.MONTH)
+                month = c.get(Calendar.MONTH)+1
                 day = c.get(Calendar.DAY_OF_MONTH)
                 c.add(Calendar.DAY_OF_MONTH, + 1)
                 selectedDate = "$year. ${month + 1}. $day"
@@ -100,21 +124,16 @@ class ReportSkeletonFragment : Fragment() {
         val yAxisleft = lineChart.axisLeft
         val yAxisright = lineChart.axisRight
         val legend = lineChart.legend
-        val datalist : List<ChartVO> = listOf(
-            ChartVO("5월", 48),
-            ChartVO("6월", 70),
-            ChartVO("7월", 77),
-            ChartVO("8월", 65),
-            ChartVO("9월", 31),
-            ChartVO("10월", 28),
-            ChartVO("11월", 52),
-            ChartVO("12월", 14),
-            ChartVO("1월", 76),
-            ChartVO("2월", 51),
-            ChartVO("3월", 55),
-            ChartVO("4월", 62),
 
-        )
+        val datalist : MutableList<ChartVO> = mutableListOf()
+        for (i in 0 until 12) {
+            val currentMonth = (month +i) % 12
+            if (currentMonth == 0) {
+                datalist.add(ChartVO("12월", Random.nextInt(99)))
+            } else {
+                datalist.add(ChartVO("${currentMonth}월", Random.nextInt(99)))
+            }
+        }
         val entries : MutableList<Entry> = mutableListOf()
         for (i in datalist.indices) {
             // entry는 y축에 넣는 데이터 형식을 말함. Entry의 1번째 인자는 x축의 데이터의 순서, 두 번째 인자는 y값
@@ -168,13 +187,7 @@ class ReportSkeletonFragment : Fragment() {
 
         // ---- 하단 완료 목록 코드 시작 ----
         // 완료 목록 데이터 리스트 가져와야 함
-        val verticaldatalist = arrayListOf(
-            HomeRVBeginnerDataClass("https://s3-alpha-sig.figma.com/img/77a1/e5c8/74f51112ca347020d9f125ef9dfd7b0e?Expires=1708905600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=RmOHalSCMCkCHq9fkTS1Ql-awL16xeVT3VnQYJJ6tK3A0~3XGAHMgH74ZKhohnq5ubnSXaeI7FaTQ-o6ox5PnKVbFNmnngJkw38~JigqQL-iwqsAzafPhz8FOisUy6KaMqhZmxHzLOkqlvgSItJr3FePdzBOh~exOJD1T1Y9mETlV0AKMuRyI~rvlhEPT8cd5UcDjRYjGwiymtoKyIXhBv78h0-WMYnVKVrmcg4ssZnWJYPhVIuwDeVIFE-d23FCqxT7yOQZLb7LhhWKSdTX85gG3DZStjCItIpp95Ksm8ehIzx6dHK51jVcFOCIZLygbWJmTPKEgy5jjrMZUbnbFA__", "Warm up", 5),
-            HomeRVBeginnerDataClass("https://s3-alpha-sig.figma.com/img/0367/a926/45a7ad2e42d3e66fc639f06e796efdd3?Expires=1708905600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=j4bPb33sBiPAmUB2fCUrWTLonadjkYOaRW598jqoBvldokKK~RCq82H0UMTDcMcerGnmGydNcVZE~hEMtv0NjVIxvgYgHK6JvFScvlvR6HVJ-O2CtEwA-sAqRBA~8tCpQCQWDqe0Z1aX95JWi6wftHQu9OqZmdkeAQQ7fSeC9FkjYTygaanr37qPcccIBBjmkNjlfQ85IU0Wn6ywYIEmrxFwPNk6xSRfOJAn9HZtHOwOLfrjVFTVZRt9UDFZw4MCyhMWI0QPBbwWc~wTIKgFJ8xAohNxo~DGMi98Ypk0o1ZHzzZ49IzxNKr5taqVW4KRKK9iGumFCLd26g3uEvjCGA__", "Warm up", 8),
-            HomeRVBeginnerDataClass("https://s3-alpha-sig.figma.com/img/5c8a/5cc3/c0ae026fa6ab97ba7d0c9fd63fb90d9c?Expires=1708905600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=cMNEYRJB6aZLUlojAdETQ5ZcUzWQgZL5gJkE8-f8iYyUiaFAnBJTkC6LyVTwj19d-8bfPxlWuauWPfNgNMmbvVx31l1XTrNji1JN8zeUhOfwlD8jp6kxjNHVZlwISepxUzOKEZWdS6wRvDbi6iOeUNYXLPAbfCiA5dCUaP-wlOurmoDhgFKN-XPKORDA-2-yx8A5xRbWpyMdcYjLMbCXek3c3IXZDKbXjtzQXOJyLS2HTJVmhLqN2c0DsMuK0UC0wqV0bwgeIf~0ZOcb2jddj-rsuaAUwQmtaH0xNwNGpaiBPMMwcZRv66sLfQbDYg2WMQE9ixsyYaIJIXZhxDsehA__", "Warm up", 10),
-            HomeRVBeginnerDataClass("https://s3-alpha-sig.figma.com/img/b925/3e59/fe348ec1dee0634a041808309dfd74c4?Expires=1708905600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=FE7mAbkmJPzLrFYjGFsDLxsU1d4ByWAQaf9MKRFu6PaSIcoeqnzUoh7uwqde3uS-L~mT2ShERpv-zXiQ45NeIm6LvOvLhG3JRTo04UO7g0E4HqmvVl1aiwgde~XT~JoSTAg~l8-~ttyC-QvP73Sy-GHZQYvX6kLa02jkj509D6VaJTCB3Px67~XDolLAPwzKuHUnJVQ~a~Zhob7zK8Rppv7maBlIgI3etlmoH1FgsXz2CQi88q9753EJBqTdjTrWf4fQSOcELezLqGN8fQhWkFnLprSNWOfj8qSkEJBhAhjSkUp1xfvIefakzl4pplJ2lIPrMY-8JYZlHnQ~4ZK5Uw__", "Warm up", 5),
-            HomeRVBeginnerDataClass("https://s3-alpha-sig.figma.com/img/dd28/d323/ee837bfe2c5d807feee37a78ff275737?Expires=1708905600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=g4NmwyApaTRDaVpXx795WAyVYcridHhJwlcOcv3Vu1HJnxYBTFtmssuTADmtZX5oIpcO6e4Y9mgbRQkoQtNInr4MXcOXZYZew6b7DZN9q0RJe~cIdKVlZ9gz8DVgIKDc3Q9eT2e9fft~t7OGNNfkpcAwU1WBI8Mpsdbu9rZAlyOjjjUkijUaN6Nqvv05UVKJuyTM9lpgakJh1z2dgfugEXs00hdEPIlQALRMsVe9jfD5qQR2GZUqN8dF~78-Thxn3c~OJFpG-DRe9H5iKoNsVaggVw3s~Wf~-R6S5ah7ZD6YLGigiqCCUcym2mqV4Y7VkNXZnaufA2N2uK~c~TnqpQ__", "Warm up", 12),
-            )
+        val verticaldatalist = ArrayList<HomeRVBeginnerDataClass>()
         val adapter = HomeVerticalRecyclerViewAdapter(verticaldatalist)
         adapter.warmupList = verticaldatalist
         binding.rvSkeletonVertical.adapter = adapter
@@ -185,4 +198,31 @@ class ReportSkeletonFragment : Fragment() {
 
 
     }
+    fun fetchUserHistoryJson(myUrl : String, user_mobile:String, callback: () -> Unit) {
+        val client = OkHttpClient()
+//        val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url("${myUrl}users/read.php?user_mobile=$user_mobile")
+            .get()
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("OKHTTP3", "Failed to execute request!")
+            }
+            override fun onResponse(call: Call, response: Response)  {
+                val responseBody = response.body?.string()
+                Log.e("OKHTTP3", "Success to execute request!: $responseBody")
+                val jsonObj__ = responseBody?.let { JSONObject(it) }
+//              TODO  히스토리에 맞게 정보 받아와서 VIEWMODEL에 담아넣기
+                val jsonObj = jsonObj__?.optJSONObject("data")
+                viewModel.UserHistory.value = jsonObj
+//                val t_userInstance = context?.let { Singleton_t_user.getInstance(requireContext()) }
+//                t_userInstance?.jsonObject = jsonObj
+//                Log.e("OKHTTP3>싱글톤", "${t_userInstance?.jsonObject}")
+                callback()
+            }
+        })
+    }
+
 }

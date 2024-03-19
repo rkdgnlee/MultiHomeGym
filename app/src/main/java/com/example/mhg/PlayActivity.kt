@@ -1,49 +1,67 @@
 package com.example.mhg
 
-import android.content.pm.PackageManager
+import android.app.Activity
+import android.content.ContentValues.TAG
+import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import android.widget.ImageButton
+import androidx.annotation.RequiresApi
+import com.example.mhg.VO.HomeRVBeginnerDataClass
 import com.example.mhg.databinding.ActivityPlayBinding
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.RawResourceDataSource
-import com.google.android.exoplayer2.util.Util
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class PlayActivity : AppCompatActivity() {
     lateinit var binding : ActivityPlayBinding
-    private var videoUrl = "http://techslides.com/demos/sample-videos/small.mp4"
-//    private lateinit var cameraExecutor: ExecutorService
+    private var videoUrl = "https://gym.tangostar.co.kr/data/contents/videos/%EB%93%B1%20%EC%8A%A4%ED%8A%B8%EB%A0%88%EC%B9%AD%20%EC%9D%98%EC%9E%90.mp4"
 
     private var simpleExoPlayer: SimpleExoPlayer? = null
     private var player : SimpleExoPlayer? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition = 0L
+    
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPlayBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        if (allPermissionsGranted()) {
-//            startCamera()
-//        } else {
-//            ActivityCompat.requestPermissions(
-//                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
-//            )
-//        }
-//        cameraExecutor = Executors.newSingleThreadExecutor()
-//        binding.pcvPlay.showTimeoutMs = 0
+        val exerciseData: HomeRVBeginnerDataClass? = intent.getParcelableExtra("ExerciseData")
+        Log.w(TAG, "$exerciseData")
+
+//        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+
+        // -----! 각 설명들 textView에 넣기 !-----
+        videoUrl = exerciseData?.videoFilepath.toString()
+        binding.tvPlayExerciseStage.text = exerciseData?.exerciseStage.toString()
+        binding.tvPlayExerciseFrequency.text = exerciseData?.exerciseFequency.toString()
+        binding.tvPlayExerciseIntensity.text = exerciseData?.exerciseIntensity.toString()
+        binding.tvPlayExerciseInitialPosture.text = exerciseData?.exerciseInitialPosture.toString()
+        binding.tvPlayExerciseMethod.text = exerciseData?.exerciseMethod.toString()
+        binding.tvPlayExerciseCaution.text = exerciseData?.exerciseCaution.toString()
+
+
+        playbackPosition = intent.getLongExtra("current_position", 0L)
         initPlayer()
+
+        // -----! 전체화면 구현 로직 시작 !-----
+        val fullscreenButton = binding.pvPlay.findViewById<ImageButton>(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
+
+        fullscreenButton.setOnClickListener {
+            val intent = Intent(this, PlayFullScreenActivity::class.java)
+            intent.putExtra("video_url", videoUrl)
+            intent.putExtra("current_position", simpleExoPlayer?.currentPosition)
+
+            startActivityForResult(intent, 8080)
+        }
+
     }
 
     private fun initPlayer(){
@@ -52,6 +70,7 @@ class PlayActivity : AppCompatActivity() {
         buildMediaSource()?.let {
             simpleExoPlayer?.prepare(it)
         }
+        simpleExoPlayer?.seekTo(playbackPosition)
     }
     private fun buildMediaSource() : MediaSource {
         val dataSourceFactory = DefaultDataSourceFactory(this, "sample")
@@ -74,7 +93,30 @@ class PlayActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         simpleExoPlayer?.release()
+//        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("playbackPosition", simpleExoPlayer?.currentPosition ?: 0L)
+        outState.putInt("currentWindow", simpleExoPlayer?.currentWindowIndex ?: 0)
+        outState.putBoolean("playWhenReady", simpleExoPlayer?.playWhenReady ?: true)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 8080 && resultCode == Activity.RESULT_OK) {
+            val currentPosition = data?.getLongExtra("current_position", 0)
+            val VideoUrl = data?.getStringExtra("video_url")
+
+            videoUrl = VideoUrl.toString()
+            playbackPosition = currentPosition!!
+            initPlayer()
+        }
+    }
+
+
     // -----  오디오 플레이어 코드 시작  -----
 //    override fun onStart() {
 //        super.onStart()
@@ -131,58 +173,5 @@ class PlayActivity : AppCompatActivity() {
 //    }  // -----  오디오 플레이어 코드 끝  -----
 
 
-//    private fun startCamera() {
-//        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-//        cameraProviderFuture.addListener({
-//            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-//
-//            val preview = Preview.Builder()
-//                .build()
-//                .also {
-//                    it.setSurfaceProvider(binding.previewView.surfaceProvider)
-//                }
-//            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-//            try {
-//                cameraProvider.unbindAll()
-//                cameraProvider.bindToLifecycle(
-//                    this, cameraSelector, preview
-//                )
-//            } catch (exc: Exception) {
-//                Log.e("실패", "USE CASE binding failed", exc)
-//            }
-//        }, ContextCompat.getMainExecutor(this))
-//
-//    }
-//
-//    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-//        ContextCompat.checkSelfPermission(
-//            baseContext, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-//    }
-//
-//    companion object {
-//        private const val TAG = "CameraXApp"
-//        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-//        private const val REQUEST_CODE_PERMISSIONS = 10
-//        private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
-//    }
-//
-//    override fun onRequestPermissionsResult(
-//        requestCode: Int,
-//        permissions: Array<out String>,
-//        grantResults: IntArray
-//    ) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-//            if (allPermissionsGranted()) {
-//                startCamera()
-//            } else {
-//                Toast.makeText(this, "접근 권한이 허용되지 않아 카메라를 실행할 수 없습니다. 설정에서 접근 권한을 허용해주세요", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//    }
-//
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        cameraExecutor.shutdown()
-//    }
+
 }
