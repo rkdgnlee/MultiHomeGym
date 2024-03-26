@@ -9,14 +9,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebViewClient
-import androidx.activity.viewModels
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mhg.Adapter.HomeVerticalRecyclerViewAdapter
 import com.example.mhg.VO.ChartVO
-import com.example.mhg.VO.HomeRVBeginnerDataClass
+import com.example.mhg.VO.ExerciseVO
 import com.example.mhg.VO.UserViewModel
 import com.example.mhg.databinding.FragmentReportSkeletonBinding
 import com.github.mikephil.charting.components.XAxis
@@ -187,9 +184,9 @@ class ReportSkeletonFragment : Fragment() {
 
         // ---- 하단 완료 목록 코드 시작 ----
         // 완료 목록 데이터 리스트 가져와야 함
-        val verticaldatalist = ArrayList<HomeRVBeginnerDataClass>()
-        val adapter = HomeVerticalRecyclerViewAdapter(verticaldatalist)
-        adapter.warmupList = verticaldatalist
+        val verticaldatalist = ArrayList<ExerciseVO>()
+        val adapter = HomeVerticalRecyclerViewAdapter(verticaldatalist, "home")
+        adapter.verticalList = verticaldatalist
         binding.rvSkeletonVertical.adapter = adapter
         val linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         binding.rvSkeletonVertical.layoutManager = linearLayoutManager

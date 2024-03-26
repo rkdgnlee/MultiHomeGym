@@ -16,8 +16,8 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.viewModels
 import com.example.mhg.Dialog.ExerciseLoadDialogFragment
 import com.example.mhg.VO.UserViewModel
-import com.example.mhg.`object`.NetworkService.fetchINSERTJson
 import com.example.mhg.databinding.FragmentIntro3Binding
+import com.example.mhg.`object`.NetworkService.fetchUserINSERTJson
 import com.example.mhg.`object`.Singleton_t_user
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -55,32 +55,6 @@ class Intro3Fragment : Fragment() {
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private val TAG = this.javaClass.simpleName
 //    val viewModel : UserViewModel by viewModels()
-
-//    fun fetchSELECTJson(myUrl : String, user_mobile:String, callback: () -> Unit){
-//        val client = OkHttpClient()
-////        val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull())
-//        val request = Request.Builder()
-//            .url("${myUrl}users/read.php?user_mobile=$user_mobile")
-//            .get()
-//            .build()
-//
-//        client.newCall(request).enqueue(object : Callback  {
-//            override fun onFailure(call: Call, e: IOException) {
-//                Log.e("OKHTTP3", "Failed to execute request!")
-//            }
-//            override fun onResponse(call: Call, response: Response)  {
-//                val responseBody = response.body?.string()
-//                Log.e("OKHTTP3", "Success to execute request!: $responseBody")
-//                val jsonObj__ = responseBody?.let { JSONObject(it) }
-////              TODO  if () 어떤 response가 오는지에 맞게 일단 조건을 걸어야 함 해당 값들이 반환되면 거기다가 UPDATE만 하기, 없으면 INSERT
-//                val jsonObj = jsonObj__?.optJSONObject("data")
-//                val t_userInstance = context?.let { Singleton_t_user.getInstance(requireContext()) }
-//                t_userInstance?.jsonObject = jsonObj
-//                Log.e("OKHTTP3>싱글톤", "${t_userInstance?.jsonObject}")
-//                callback()
-//            }
-//        })
-//    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -200,7 +174,7 @@ class Intro3Fragment : Fragment() {
 
                     override fun onSuccess(result: NidProfileResponse) {
                         val JsonObj = JSONObject()
-                        val naver_mobile = result.profile?.mobile.toString().replaceFirst("010", "+82 10")
+                        val naver_mobile = result.profile?.mobile.toString().replaceFirst("010", "+8210")
                         val naver_gender : String
                         naver_gender = if (result.profile?.gender.toString() == "M") {
                             "MALE"
@@ -216,11 +190,11 @@ class Intro3Fragment : Fragment() {
                         JsonObj.put("naver_login_id" , result.profile?.id.toString())
 
                         Log.i("$TAG, 네이버", JsonObj.getString("user_mobile"))
-                        fetchINSERTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString()) {
+                        fetchUserINSERTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString()) {
                             val t_userInstance = context?.let { Singleton_t_user.getInstance(requireContext()) }
                             t_userInstance?.jsonObject = JsonObj
                             Log.e("OKHTTP3>싱글톤", "${t_userInstance?.jsonObject}")
-                            ExerciseDialogInit()
+                            MainInit()
 
                         }
                     }
@@ -253,20 +227,20 @@ class Intro3Fragment : Fragment() {
                             }
                             else if (user != null) {
                                 val JsonObj = JSONObject()
-
+                                val kakao_mobile = user.kakaoAccount?.phoneNumber.toString().replaceFirst("010", "+8210")
                                 JsonObj.put("user_name" , user.kakaoAccount?.name.toString())
                                 JsonObj.put("user_gender", user.kakaoAccount?.gender.toString())
-                                JsonObj.put("user_mobile", user.kakaoAccount?.phoneNumber.toString())
+                                JsonObj.put("user_mobile", kakao_mobile)
                                 JsonObj.put("user_email", user.kakaoAccount?.email.toString())
                                 JsonObj.put("user_birthday", user.kakaoAccount?.birthyear.toString() + user.kakaoAccount?.birthday.toString())
                                 JsonObj.put("kakao_login_id" , user.id.toString())
 
                                 Log.w("$TAG, 카카오회원가입", JsonObj.getString("user_mobile"))
-                                fetchINSERTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString()) {
+                                fetchUserINSERTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString()) {
                                     val t_userInstance = context?.let { Singleton_t_user.getInstance(requireContext()) }
                                     t_userInstance?.jsonObject = JsonObj
                                     Log.e("OKHTTP3>싱글톤", "${t_userInstance?.jsonObject}")
-                                    ExerciseDialogInit()
+                                    MainInit()
                                 }
                             }
                         }
@@ -286,9 +260,9 @@ class Intro3Fragment : Fragment() {
         // ---- 카카오 로그인 연동 끝 ----
     }
 
-    private fun ExerciseDialogInit() {
-        val dialogFragment = ExerciseLoadDialogFragment()
-        dialogFragment.show(requireActivity().supportFragmentManager, "DialogFragment")
+    private fun MainInit() {
+        val intent = Intent(requireContext() ,MainActivity::class.java)
+        startActivity(intent)
     }
 //    private fun setToken(context: Context, key: String, value: String) {
 //        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC

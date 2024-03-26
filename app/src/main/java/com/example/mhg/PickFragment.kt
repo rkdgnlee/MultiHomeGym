@@ -5,38 +5,51 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mhg.Adapter.PickRecyclerViewAdapter
-import com.example.mhg.VO.RoutingVO
+import com.example.mhg.VO.ExerciseViewModel
 import com.example.mhg.databinding.FragmentPickBinding
-import com.google.android.gms.dynamic.SupportFragmentWrapper
+import com.example.mhg.`object`.Singleton_t_user
 
 
 class PickFragment : Fragment(), onPickDetailClickListener {
     lateinit var binding : FragmentPickBinding
-
+    val viewModel : ExerciseViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentPickBinding.inflate(inflater)
 
-        val pickList = mutableListOf(
-            RoutingVO("기본 운동 루틴1", "pick_detail"),
-            RoutingVO("몸풀기 루틴", "pick_detail"),
-            RoutingVO("운동 마무리", "pick_detail"),
-            RoutingVO("인터벌", "pick_detail"),
+        // -----! viewmodel의 list관리 시작 !-----
+        val pickList = mutableListOf<String>()
+        viewModel.pickList.observe(viewLifecycleOwner) { jsonArray ->
+            pickList.clear()
+            for (i in 0 until jsonArray.length()) {
+                val pickObject = jsonArray.getJSONObject(i)
+                pickList.add(pickObject.getString("pickName"))
+            }
+        }
+        // -----! viewmodel의 list관리 끝 !-----
 
-        )
-        val PickRecyclerViewAdapter = PickRecyclerViewAdapter(pickList, this)
+
+
+
+        val PickRecyclerViewAdapter = PickRecyclerViewAdapter(pickList, this, requireActivity())
         binding.rvPick.adapter = PickRecyclerViewAdapter
         val linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         binding.rvPick.layoutManager = linearLayoutManager
 
 
         binding.btnPickAdd.setOnClickListener {
-
+            viewModel.exerciseUnits.value?.clear()
+            requireActivity().supportFragmentManager.beginTransaction().apply {
+                setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_right)
+                replace(R.id.flPick, PickAddFragment())
+                addToBackStack(null)
+                commit()
+            }
         }
 
         return binding.root

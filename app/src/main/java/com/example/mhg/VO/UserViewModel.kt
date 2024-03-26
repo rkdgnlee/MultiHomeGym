@@ -22,9 +22,12 @@ class UserViewModel: ViewModel() {
     val User = MutableLiveData(JSONObject())
 
     val UserHistory = MutableLiveData(JSONObject())
+
     init {
         User.value = JSONObject()
     }
+
+
     val idCondition = MutableLiveData(false)
     val nameCondition = MutableLiveData(false)
     val mobileCondition = MutableLiveData(false)
@@ -32,13 +35,4 @@ class UserViewModel: ViewModel() {
     val pwCompare = MutableLiveData(false)
     val emailCondition = MutableLiveData(false)
     val mobileAuthCondition = MutableLiveData(false)
-
-    fun checkConditions(): Boolean {
-        return idCondition.value == true &&
-                nameCondition.value == true &&
-                mobileCondition.value == true &&
-                pwCondition.value == true &&
-                pwCompare.value == true &&
-                emailCondition.value == true
-        }
 }
