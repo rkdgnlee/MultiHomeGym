@@ -20,7 +20,7 @@ import com.example.mhg.VO.ExerciseVO
 import com.example.mhg.VO.ExerciseViewModel
 import com.example.mhg.VO.PickItemVO
 import com.example.mhg.databinding.FragmentPickEditBinding
-import com.example.mhg.`object`.NetworkExerciseService.updatePickItemJson
+import com.example.mhg.`object`.NetworkExerciseService.updateFavoriteItemJson
 import com.example.mhg.`object`.Singleton_t_user
 import org.json.JSONArray
 import org.json.JSONObject
@@ -59,17 +59,17 @@ class PickEditFragment : Fragment() {
         binding.etPickEditName.setText(title)
 
         // -----! EditText 셋팅 시작 !-----
-        val currentPickItem = viewModel.pickItems.value?.find { it.pickName == title }
-        if (viewModel.pickEditItem.value == null || viewModel.pickEditItem.value!!.length() == 0) { // 초기 화면 일 때,
+        val currentPickItem = viewModel.favoriteItems.value?.find { it.favoriteName == title }
+        if (viewModel.favoriteEditItem.value == null || viewModel.favoriteEditItem.value!!.length() == 0) { // 초기 화면 일 때,
             if (currentPickItem != null) {
-                binding.etPickEditName.setText(currentPickItem.pickName.toString())
-                binding.etPickEditExplainTitle.setText(currentPickItem.pickExplainTitle.toString())
-                binding.etPickEditExplain.setText(currentPickItem.pickExplain.toString())
+                binding.etPickEditName.setText(currentPickItem.favoriteName.toString())
+                binding.etPickEditExplainTitle.setText(currentPickItem.favoriteExplainTitle.toString())
+                binding.etPickEditExplain.setText(currentPickItem.favoriteExplain.toString())
             }
         } else {
-            binding.etPickEditName.setText(viewModel.pickEditItem.value!!.optString("favorite_name"))
-            binding.etPickEditExplainTitle.setText(viewModel.pickEditItem.value!!.optString("favorite_explain_title"))
-            binding.etPickEditExplain.setText(viewModel.pickEditItem.value!!.optString("favorite_explain"))
+            binding.etPickEditName.setText(viewModel.favoriteEditItem.value!!.optString("favorite_name"))
+            binding.etPickEditExplainTitle.setText(viewModel.favoriteEditItem.value!!.optString("favorite_explain_title"))
+            binding.etPickEditExplain.setText(viewModel.favoriteEditItem.value!!.optString("favorite_explain"))
         }
 // -----! EditText 셋팅 끝 !-----
 
@@ -84,16 +84,16 @@ class PickEditFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                viewModel.pickEditItem.value?.put("favorite_name", s.toString())
-                viewModel.pickEditItem.value?.let { Log.w("편집이름", it.optString("favorite_name")) }
+                viewModel.favoriteEditItem.value?.put("favorite_name", s.toString())
+                viewModel.favoriteEditItem.value?.let { Log.w("편집이름", it.optString("favorite_name")) }
             }
         })
         binding.etPickEditExplainTitle.addTextChangedListener(object:TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                viewModel.pickEditItem.value?.put("favorite_explain_title", s.toString())
-                viewModel.pickEditItem.value?.let { Log.w("편집설명title", it.optString("favorite_explain_title")) }
+                viewModel.favoriteEditItem.value?.put("favorite_explain_title", s.toString())
+                viewModel.favoriteEditItem.value?.let { Log.w("편집설명title", it.optString("favorite_explain_title")) }
             }
         })
 
@@ -101,8 +101,8 @@ class PickEditFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                viewModel.pickEditItem.value?.put("favorite_explain", s.toString())
-                viewModel.pickEditItem.value?.let { Log.w("편집설명", it.optString("favorite_explain")) }
+                viewModel.favoriteEditItem.value?.put("favorite_explain", s.toString())
+                viewModel.favoriteEditItem.value?.let { Log.w("편집설명", it.optString("favorite_explain")) }
             }
         })
 
@@ -170,7 +170,8 @@ class PickEditFragment : Fragment() {
             requireActivity().supportFragmentManager.beginTransaction().apply {
                 setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_right)
                 replace(R.id.flMain, PickDetailFragment.newInstance(title))
-                commit()
+
+                remove(PickEditFragment()).commit()
             }
         } // -----! 즐겨찾기 하나 만들기 끝 !-----
     }
@@ -178,22 +179,20 @@ class PickEditFragment : Fragment() {
 
         // -----! 데이터 갈무리 후 appClass 수정 시작 !-----
 //        val appClass = requireContext().applicationContext as AppClass
-        val index = viewModel.pickItems.value?.indexOfFirst { it.pickName == title }
+        val index = viewModel.favoriteItems.value?.indexOfFirst { it.favoriteName == title }
 
         val pickItem = PickItemVO(
-            pickSn = index?.let { viewModel.pickItems.value!![it].pickSn }!!,
-            pickName = binding.etPickEditName.text.toString(),
-            pickExplainTitle = binding.etPickEditExplainTitle.text.toString(),
-            pickExplain = binding.etPickEditExplain.text.toString(),
+            favoriteSn = index?.let { viewModel.favoriteItems.value!![it].favoriteSn }!!,
+            favoriteName = binding.etPickEditName.text.toString(),
+            favoriteExplainTitle = binding.etPickEditExplainTitle.text.toString(),
+            favoriteExplain = binding.etPickEditExplain.text.toString(),
             exercises = viewModel.exerciseUnits.value?.toMutableList(),
         )
-        Log.w("PickItemSave", "시리얼넘버: ${pickItem.pickSn}, 운동들: ${pickItem.exercises}")
+        Log.w("PickItemSave", "시리얼넘버: ${pickItem.favoriteSn}, 운동들: ${pickItem.exercises}")
 
-        if (index != null) {
-            viewModel.pickItems.value?.set(index, pickItem)
-            viewModel.pickList.value?.set(index, Pair(pickItem.pickSn!!.toInt(), pickItem.pickName.toString()))
-            title = pickItem.pickName.toString()
-        }
+        viewModel.favoriteItems.value?.set(index, pickItem)
+        viewModel.favoriteList.value?.set(index, Pair(pickItem.favoriteSn.toInt(), pickItem.favoriteName.toString()))
+        title = pickItem.favoriteName.toString()
 
         // -----! 데이터 갈무리 후 appClass 수정 끝 !-----
 
@@ -207,13 +206,13 @@ class PickEditFragment : Fragment() {
         Log.w("DscIDList", "${descriptionIdList}")
         // -----! json으로 변환 후 update 시작 !-----
         val JsonObj = JSONObject()
-        JsonObj.put("favorite_name", pickItem.pickName)
+        JsonObj.put("favorite_name", pickItem.favoriteName)
         JsonObj.put("exercise_description_ids", JSONArray(descriptionIdList))
-        JsonObj.put("favorite_description_title", pickItem.pickExplainTitle)
-        JsonObj.put("favorite_description", pickItem.pickExplain)
+        JsonObj.put("favorite_description_title", pickItem.favoriteExplainTitle)
+        JsonObj.put("favorite_description", pickItem.favoriteExplain)
         Log.w("JsonExerciseIdList","${JsonObj.get("exercise_description_ids")}")
         Log.w("updateJsonInBody", "$JsonObj")
-        updatePickItemJson(getString(R.string.IP_ADDRESS_t_favorite), pickItem.pickSn.toString(), JsonObj.toString()) {
+        updateFavoriteItemJson(getString(R.string.IP_ADDRESS_t_favorite), pickItem.favoriteSn.toString(), JsonObj.toString()) {
             // TODO 반환된 값으로 뭐 해도 되고 안해도 됨.
         }
         viewModel.exerciseUnits.value?.clear()

@@ -8,16 +8,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isInvisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mhg.Adapter.PickRecyclerViewAdapter
-import com.example.mhg.VO.ExerciseVO
 import com.example.mhg.VO.ExerciseViewModel
 import com.example.mhg.VO.PickItemVO
 import com.example.mhg.databinding.FragmentPickBinding
-import com.example.mhg.`object`.NetworkExerciseService.fetchPickItemsJsonByMobile
+import com.example.mhg.`object`.NetworkExerciseService.fetchFavoriteItemsJsonByMobile
 import com.example.mhg.`object`.Singleton_t_user
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
@@ -37,39 +35,39 @@ class PickFragment : Fragment(), onPickDetailClickListener {
         // -----! singleton에서 전화번호 가져오기 시작 !-----
         val t_userData = Singleton_t_user.getInstance(requireContext())
 //        val appClass = requireContext().applicationContext as AppClass
-        val user_mobile = t_userData.jsonObject?.optString("user_mobile")
+        val user_mobile = t_userData.jsonObject?.optJSONObject("data")?.optString("user_mobile")
         val encodedUserMobile = URLEncoder.encode(user_mobile, "UTF-8")
         // -----! singleton에서 전화번호 가져오기 끝 !-----
 
         lifecycleScope.launch {
 
             // -----! 핸드폰 번호로 PickItems 가져오기 시작 !-----
-            val pickList = fetchPickItemsJsonByMobile(getString(R.string.IP_ADDRESS_t_favorite), user_mobile.toString()) // user_mobile 넣기
+            val pickList = fetchFavoriteItemsJsonByMobile(getString(R.string.IP_ADDRESS_t_favorite), user_mobile.toString()) // user_mobile 넣기
             Log.w(TAG, encodedUserMobile)
 
             // -----! appClass list관리 시작 !-----
             if (pickList != null) {
-                viewModel.pickList.value?.clear()
-                viewModel.pickItems.value?.clear()
+                viewModel.favoriteList.value?.clear()
+                viewModel.favoriteItems.value?.clear()
                 viewModel.exerciseUnits.value?.clear()
                 for (i in 0 until pickList.length()) {
-                    viewModel.pickList.value?.add(Pair(pickList.getJSONObject(i).optInt("favorite_sn"),pickList.getJSONObject(i).getString("favorite_name")))
+                    viewModel.favoriteList.value?.add(Pair(pickList.getJSONObject(i).optInt("favorite_sn"),pickList.getJSONObject(i).getString("favorite_name")))
                     val pickItemVO = PickItemVO(
-                        pickSn = pickList.getJSONObject(i).optInt("favorite_sn"),
-                        pickName = pickList.getJSONObject(i).optString("favorite_name"),
-                        pickExplain = pickList.getJSONObject(i).optString("favorite_description"),
-                        pickExplainTitle = pickList.getJSONObject(i).optString("favorite_description"),
-                        pickDisclosure = "",
+                        favoriteSn = pickList.getJSONObject(i).optInt("favorite_sn"),
+                        favoriteName = pickList.getJSONObject(i).optString("favorite_name"),
+                        favoriteExplain = pickList.getJSONObject(i).optString("favorite_description"),
+                        favoriteExplainTitle = pickList.getJSONObject(i).optString("favorite_description"),
+                        favoriteDisclosure = "",
                         exercises = mutableListOf()
                     )
-                    viewModel.pickItems.value?.add(pickItemVO)
-                    Log.w("$TAG, pickitem", "${viewModel.pickItems.value}")
+                    viewModel.favoriteItems.value?.add(pickItemVO)
+                    Log.w("$TAG, pickitem", "${viewModel.favoriteItems.value}")
 
                 }
             }
 
 
-            viewModel.pickList.observe(viewLifecycleOwner) { jsonArray ->
+            viewModel.favoriteList.observe(viewLifecycleOwner) { jsonArray ->
 //                 아무것도 없을 때 나오는 캐릭터
                 if (jsonArray.isEmpty()) {
                     binding.sflPick.stopShimmer()
@@ -81,7 +79,7 @@ class PickFragment : Fragment(), onPickDetailClickListener {
                 }
             } // -----! appClass list관리 끝 !-----
 
-            val PickRecyclerViewAdapter = PickRecyclerViewAdapter(viewModel.pickList.value!!.map { it.second }.toMutableList(), this@PickFragment, requireActivity())
+            val PickRecyclerViewAdapter = PickRecyclerViewAdapter(viewModel.favoriteList.value!!.map { it.second }.toMutableList(), this@PickFragment, requireActivity())
             binding.rvPick.adapter = PickRecyclerViewAdapter
             val linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             binding.rvPick.layoutManager = linearLayoutManager

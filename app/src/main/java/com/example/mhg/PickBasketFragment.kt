@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -140,8 +141,11 @@ class PickBasketFragment : Fragment(), BasketItemTouchListener {
                 setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_right)
                 replace(R.id.flMain, PickEditFragment.newInstance(title))
                     .addToBackStack(null)
-                    .commit()
+
+
+                remove(PickBasketFragment()).commit()
             }
+
         }
 
     }

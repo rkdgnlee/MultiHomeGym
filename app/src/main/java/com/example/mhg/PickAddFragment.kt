@@ -12,21 +12,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.mhg.Adapter.HomeVerticalRecyclerViewAdapter
 import com.example.mhg.VO.ExerciseViewModel
 import com.example.mhg.VO.PickItemVO
 import com.example.mhg.databinding.FragmentPickAddBinding
-import com.example.mhg.`object`.NetworkExerciseService
-import com.example.mhg.`object`.NetworkExerciseService.fetchPickItemJsonBySn
-import com.example.mhg.`object`.NetworkExerciseService.insertPickItemJson
+import com.example.mhg.`object`.NetworkExerciseService.insertFavoriteItemJson
 import com.example.mhg.`object`.Singleton_t_user
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.Gson
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 
@@ -62,10 +53,10 @@ class PickAddFragment : Fragment() {
         binding.btnPickAddExercise.setOnClickListener {
             if (favoriteNameValidation) {
                 val pickItemVO = PickItemVO(
-                    pickName = binding.etPickAddName.text.toString(),
-                    pickExplainTitle = binding.etPickAddExplainTitle.text.toString(),
-                    pickExplain = binding.etPickAddExplain.text.toString(),
-                    pickDisclosure = when {
+                    favoriteName = binding.etPickAddName.text.toString(),
+                    favoriteExplainTitle = binding.etPickAddExplainTitle.text.toString(),
+                    favoriteExplain = binding.etPickAddExplain.text.toString(),
+                    favoriteDisclosure = when {
                         binding.clPickAddPublic.visibility == View.VISIBLE -> "public"
                         binding.clPickAddUnlisted.visibility == View.VISIBLE -> "unlisted"
                         else -> "private"
@@ -74,26 +65,26 @@ class PickAddFragment : Fragment() {
                 )
                 // -----! 나중에Detail에서 꺼내볼 vm 만들기 !-----
 //                val appClass = requireContext().applicationContext as AppClass
-                if (pickItemVO.pickName?.isNotEmpty() == true) {
-                    viewModel.pickItem.value = pickItemVO
-                    viewModel.pickList.value?.add(Pair(viewModel.pickItem.value!!.pickSn, viewModel.pickItem.value!!.pickName.toString()))
-                    viewModel.pickItems.value?.add(pickItemVO)
+                if (pickItemVO.favoriteName?.isNotEmpty() == true) {
+                    viewModel.favoriteItem.value = pickItemVO
+                    viewModel.favoriteList.value?.add(Pair(viewModel.favoriteItem.value!!.favoriteSn, viewModel.favoriteItem.value!!.favoriteName.toString()))
+                    viewModel.favoriteItems.value?.add(pickItemVO)
                 }
                 // -----! json으로 형식을 변환 !-----
 
                 val jsonObj = JSONObject()
-                jsonObj.put("favorite_name", pickItemVO.pickName)
-                jsonObj.put("favorite_description_title", pickItemVO.pickExplainTitle)
-                jsonObj.put("favorite_description", pickItemVO.pickExplain)
+                jsonObj.put("favorite_name", pickItemVO.favoriteName)
+                jsonObj.put("favorite_description_title", pickItemVO.favoriteExplainTitle)
+                jsonObj.put("favorite_description", pickItemVO.favoriteExplain)
                 jsonObj.put("user_mobile", t_userData.jsonObject?.optString("user_mobile"))
                 Log.w("즐겨찾기 하나 만들기", "$jsonObj")
 
 //                viewModel.addPick(jsonObj.optString("pickName"), pickItemVO.pickSn.toString())
 
-                insertPickItemJson(getString(R.string.IP_ADDRESS_t_favorite),jsonObj.toString()) {
+                insertFavoriteItemJson(getString(R.string.IP_ADDRESS_t_favorite),jsonObj.toString()) {
                     requireActivity().supportFragmentManager.beginTransaction().apply {
-                        replace(R.id.flPick, PickDetailFragment.newInstance(pickItemVO.pickName.toString()))
-                        Log.w("$TAG, title", pickItemVO.pickName.toString())
+                        replace(R.id.flPick, PickDetailFragment.newInstance(pickItemVO.favoriteName.toString()))
+                        Log.w("$TAG, title", pickItemVO.favoriteName.toString())
                         commit()
                     }
                 }

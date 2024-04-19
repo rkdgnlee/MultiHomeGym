@@ -1,13 +1,17 @@
 package com.example.mhg
 
+import android.app.UiModeManager
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mhg.databinding.ActivityIntroBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
 class IntroActivity : AppCompatActivity() {

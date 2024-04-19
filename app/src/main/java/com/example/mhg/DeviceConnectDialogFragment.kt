@@ -1,40 +1,18 @@
 package com.example.mhg
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
-import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.TextView
-import androidx.annotation.RequiresPermission
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.mhg.Adapter.BLEListAdapter
 import com.example.mhg.VO.BLEViewModel
 import com.example.mhg.databinding.FragmentDeviceConnectDialogBinding
-import com.example.mhg.`object`.BLEGattAttributes
-import com.example.mhg.`object`.GattManager
-
-import com.example.mhg.service.BluetoothLeService
-import java.util.UUID
 
 
 class DeviceConnectDialogFragment : DialogFragment() {

@@ -43,12 +43,13 @@ android {
 
 dependencies {
 
-
+    // 스켈레톤
+    implementation("com.google.mediapipe:tasks-vision:0.20230731")
 // 외부 라이브러리
     implementation ("io.github.ShawnLin013:number-picker:2.4.13")
     implementation("com.github.shuhart:StepView:v1.5.1")
     implementation("com.seosh817:circularseekbar:1.0.2")
-    implementation("com.github.bumptech.glide:glide:4.11.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.tbuonomo:dotsindicator:5.0")
@@ -56,17 +57,17 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("io.github.litao0621:nifty-slider:1.4.6")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
-
+    implementation("io.github.ParkSangGwon:tedpermission-normal:3.3.0")
 
 // 로그인 api
-    implementation("com.navercorp.nid:oauth:5.9.0")
+    implementation("com.navercorp.nid:oauth:5.9.1")
     implementation("com.kakao.sdk:v2-common:2.19.0")
     implementation("com.kakao.sdk:v2-user:2.19.0")
     implementation("com.kakao.sdk:v2-auth:2.19.0")
     implementation("com.google.gms:google-services:4.4.1")
-    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
     implementation("com.google.firebase:firebase-messaging-ktx:23.4.1")
-    implementation("com.google.firebase:firebase-analytics:21.6.1")
+    implementation("com.google.firebase:firebase-analytics:21.6.2")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
@@ -87,9 +88,9 @@ dependencies {
     // 통신
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.android.volley:volley:1.2.1")
 
 

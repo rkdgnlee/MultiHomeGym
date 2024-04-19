@@ -2,7 +2,9 @@ package com.example.mhg
 
 import android.R
 import android.annotation.SuppressLint
+import android.app.UiModeManager
 import android.content.ContentValues
+import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,6 +33,8 @@ import com.example.mhg.VO.UserViewModel
 import com.example.mhg.databinding.FragmentHomeBeginnerBinding
 import com.example.mhg.`object`.NetworkExerciseService.fetchExerciseJson
 import com.example.mhg.`object`.NetworkUserService
+import com.example.mhg.`object`.Singleton_t_user
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 
@@ -42,11 +47,6 @@ class HomeBeginnerFragment : Fragment() {
     lateinit var ExerciseList : MutableList<ExerciseVO>
     private val exerciseTypeList = listOf("목관절", "어깨", "팔꿉", "손목", "몸통전면(복부)", "몸통 후면(척추)", "몸통 코어", "엉덩", "무릎", "발목", "유산소")
     val viewModel : UserViewModel by activityViewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -88,11 +88,20 @@ class HomeBeginnerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // ----- 로그인 시 변경 할 부분 시작 -----
-        binding.tvHomeWeight.text
-        binding.tvHomeAchieve.text
-        binding.tvHomeGoal.text
+        val t_userData = Singleton_t_user.getInstance(requireContext()).jsonObject?.optJSONObject("data")
+        binding.tvHomeWeight.text = t_userData?.optString("user_weight")
+        binding.tvHomeAchieve.text = "미설정"
+        binding.tvHomeGoal.text = "미설정"
         // ----- 로그인 시 변경 할 부분 끝 -----
 
+        val uiManager = requireActivity().getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        when (uiManager.nightMode) {
+            UiModeManager.MODE_NIGHT_YES -> {
+                if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_YES) {
+                    showThemeSettingDialog()
+                }
+            }
+        }
 
         lifecycleScope.launch {
 
@@ -129,14 +138,6 @@ class HomeBeginnerFragment : Fragment() {
                 binding.nsv.isNestedScrollingEnabled = false
                 binding.rvHomeBeginnerVertical.isNestedScrollingEnabled = false
                 binding.rvHomeBeginnerVertical.overScrollMode = 0
-
-                // -----! 메인 유저 체중/달성률/업적 control 시작 !-----
-                binding.tvHomeWeight.text = viewModel.User.value?.optString("user_weight")
-
-                binding.tvHomeGoal
-
-
-                // -----! 메인 유저 별 체중 달성률 업적 control 끝 !-----
 
                 // ----- autoCompleteTextView를 통해 sort 하는 코드 시작 -----
                 val sort_list = listOf("인기순", "조회순", "최신순", "오래된순")
@@ -233,6 +234,23 @@ class HomeBeginnerFragment : Fragment() {
             })
         }
         }
+    private fun showThemeSettingDialog() {
+        MaterialAlertDialogBuilder(requireContext(), com.example.mhg.R.style.ThemeOverlay_App_MaterialAlertDialog).apply {
+            setTitle("알림")
+            setMessage("다크모드를 설정하시겠습니까 ?")
+            setPositiveButton("예") { dialog, _ ->
+
+                val sharedPref = context.getSharedPreferences("deviceSettings", Context.MODE_PRIVATE)
+                val modeEditor = sharedPref?.edit()
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                modeEditor?.putBoolean("darkMode", true) ?: true
+                modeEditor?.apply()
+            }
+            setNegativeButton("아니오") { dialog, _ ->
+            }
+            create()
+        }.show()
+    }
     private fun autoScrollStart(intervalTime: Long) {
         homeBannerHandler.removeMessages(0)
         homeBannerHandler.sendEmptyMessageDelayed(0, intervalTime)

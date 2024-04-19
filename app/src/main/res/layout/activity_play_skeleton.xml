@@ -7,8 +7,16 @@
     android:layout_height="match_parent"
     tools:context=".PlaySkeletonActivity">
 
+    <com.example.mhg.OverlayView
+        android:id="@+id/overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toTopOf="parent" />
     <androidx.camera.view.PreviewView
-        android:id="@+id/previewView"
+        android:id="@+id/view_finder"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="horizontal"

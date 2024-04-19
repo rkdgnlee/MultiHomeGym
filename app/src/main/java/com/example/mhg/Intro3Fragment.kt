@@ -195,7 +195,9 @@ class Intro3Fragment : Fragment() {
                                 }
                             } else {
                                 fetchUserUPDATEJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString(), encodedUserMobile) {
-                                    StoreUserInSingleton(requireContext(), JsonObj)
+                                    if (jsonObj != null) {
+                                        StoreUserInSingleton(requireContext(), jsonObj)
+                                    }
                                     Log.e("네이버>싱글톤", "${Singleton_t_user.getInstance(requireContext()).jsonObject}")
                                     MainInit()
                                 }
@@ -256,7 +258,9 @@ class Intro3Fragment : Fragment() {
                                         }
                                     } else {
                                         fetchUserUPDATEJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.toString(), encodedUserMobile) {
-                                            StoreUserInSingleton(requireContext(), JsonObj)
+                                            if (jsonObj != null) {
+                                                StoreUserInSingleton(requireContext(), jsonObj)
+                                            }
                                             Log.e("카카오>싱글톤", "${Singleton_t_user.getInstance(requireContext()).jsonObject}")
                                             MainInit()
                                         }

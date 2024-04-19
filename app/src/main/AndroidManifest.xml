@@ -111,7 +111,8 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-
+            </intent-filter>
+            <intent-filter>
                 <data
                     android:host="oauth"
                     android:scheme="kakao2b0a5b008d30b13376e1b6641b100e7d" />
@@ -138,6 +139,9 @@
         <meta-data
             android:name="com.google.firebase.default_notification_channel_id"
             android:value="news" />
-
+<!--        pose landmarker-->
+        <meta-data
+            android:name="android.notch_support"
+            android:value="true" />
     </application>
 </manifest>

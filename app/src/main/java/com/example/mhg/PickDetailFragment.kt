@@ -76,7 +76,7 @@ class PickDetailFragment : Fragment() {
         binding.rvPickDetail.overScrollMode = View.OVER_SCROLL_NEVER
 
         title = requireArguments().getString(ARG_TITLE).toString()
-        val currentSn = viewModel.pickList.value?.find { it.second == title }?.first.toString()
+        val currentSn = viewModel.favoriteList.value?.find { it.second == title }?.first.toString()
         binding.actPickDetail.setText(title)
 //        val appClass = requireContext().applicationContext as AppClass
 
@@ -93,14 +93,14 @@ class PickDetailFragment : Fragment() {
             binding.sflPickDetail3.startShimmer()
             binding.sflPickDetail4.startShimmer()
             binding.ivPickDetailNull.visibility = View.GONE
-            val snData = NetworkExerciseService.fetchPickItemJsonBySn(getString(R.string.IP_ADDRESS_t_favorite), currentSn)
+            val snData = NetworkExerciseService.fetchFavoriteItemJsonBySn(getString(R.string.IP_ADDRESS_t_favorite), currentSn)
             val pickItem = if (snData != null) jsonToPickItemVO(snData) else PickItemVO(0, "", "", "", "", mutableListOf())
 
-            val currentItem = viewModel.pickItems.value?.find { it.pickName == title }
+            val currentItem = viewModel.favoriteItems.value?.find { it.favoriteName == title }
             if (currentItem != null) {
                 currentItem.exercises = pickItem.exercises
             }
-            viewModel.pickItems.value = viewModel.pickItems.value
+            viewModel.favoriteItems.value = viewModel.favoriteItems.value
 
             if (currentItem?.exercises!!.isEmpty()) {
                 binding.sflPickDetail1.stopShimmer()
@@ -125,7 +125,7 @@ class PickDetailFragment : Fragment() {
             }
 
             val pickList = mutableListOf<Pair<Int, String>>()
-            viewModel.pickList.observe(viewLifecycleOwner) { Array ->
+            viewModel.favoriteList.observe(viewLifecycleOwner) { Array ->
                 pickList.clear()
                 for (i in 0 until Array.size) {
                     pickList.add(Array[i])
@@ -180,15 +180,18 @@ class PickDetailFragment : Fragment() {
             requireActivity().supportFragmentManager.beginTransaction().apply {
                 setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_right)
                 replace(R.id.flMain, PickEditFragment.newInstance(title))
-                commit()
+
+
+                remove(PickDetailFragment()).commit()
             }
+            requireContext()
         } // -----! 편집 버튼 끝 !-----
     }
     @SuppressLint("NotifyDataSetChanged")
      private fun setPickDetail(currentItem: PickItemVO){
         Log.w("detail>currentItem", "$currentItem")
-        binding.tvPickDetailExplainTitle.text = currentItem.pickExplain.toString()
-        binding.tvPickDetailExplain.text = currentItem.pickExplain.toString()
+        binding.tvPickDetailExplainTitle.text = currentItem.favoriteExplain.toString()
+        binding.tvPickDetailExplain.text = currentItem.favoriteExplain.toString()
         val RvAdapter = HomeVerticalRecyclerViewAdapter(currentItem.exercises!!, "home")
         RvAdapter.verticalList = currentItem.exercises!!
         val linearLayoutManager2 =
@@ -212,7 +215,7 @@ class PickDetailFragment : Fragment() {
     private fun storePickUrl(viewModel : ExerciseViewModel) : MutableList<String> {
         val resourceList = mutableListOf<String>()
         val title = requireArguments().getString(ARG_TITLE).toString()
-        val currentItem = viewModel.pickItems.value?.find { it.pickName == title }
+        val currentItem = viewModel.favoriteItems.value?.find { it.favoriteName == title }
         Log.w("PreviousStoreURL", "$currentItem")
         for (i in 0 until currentItem!!.exercises!!.size) {
             val exercises = currentItem.exercises!!.get(i)

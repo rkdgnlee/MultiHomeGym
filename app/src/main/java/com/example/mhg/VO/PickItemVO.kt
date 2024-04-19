@@ -6,11 +6,11 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class PickItemVO (
-    var pickSn : Int = 0,
-    var pickName : String? = "",
-    var pickExplainTitle : String? = "",
-    var pickExplain : String? = "",
-    val pickDisclosure: String? = "",
+    var favoriteSn : Int = 0,
+    var favoriteName : String? = "",
+    var favoriteExplainTitle : String? = "",
+    var favoriteExplain : String? = "",
+    val favoriteDisclosure: String? = "",
     var exercises : MutableList<ExerciseVO>?
 ) : Parcelable {
     constructor(parcel: Parcel): this(
@@ -24,11 +24,11 @@ data class PickItemVO (
     override fun describeContents(): Int = 0
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeInt(pickSn)
-        dest.writeString(pickName)
-        dest.writeString(pickExplainTitle)
-        dest.writeString(pickExplain)
-        dest.writeString(pickDisclosure)
+        dest.writeInt(favoriteSn)
+        dest.writeString(favoriteName)
+        dest.writeString(favoriteExplainTitle)
+        dest.writeString(favoriteExplain)
+        dest.writeString(favoriteDisclosure)
         dest.writeTypedList(exercises)
     }
     companion object CREATOR : Parcelable.Creator<PickItemVO> {

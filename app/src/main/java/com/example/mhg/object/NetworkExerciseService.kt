@@ -111,7 +111,7 @@ object NetworkExerciseService {
         }
     }
     // 즐겨찾기 넣기
-    fun insertPickItemJson(myUrl: String, json: String, callback: () -> Unit) {
+    fun insertFavoriteItemJson(myUrl: String, json: String, callback: () -> Unit) {
         val client = OkHttpClient()
         val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json)
         val request = Request.Builder()
@@ -130,7 +130,7 @@ object NetworkExerciseService {
             }
         })
     }
-    fun updatePickItemJson(myUrl: String, favorite_sn: String, json:String, callback: (JSONObject?) -> Unit) {
+    fun updateFavoriteItemJson(myUrl: String, favorite_sn: String, json:String, callback: (JSONObject?) -> Unit) {
         val client = OkHttpClient()
         val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json)
         val request = Request.Builder()
@@ -151,7 +151,7 @@ object NetworkExerciseService {
         })
     }
     // 즐겨찾기 목록 조회 (PickItems에 담기)
-    suspend fun fetchPickItemsJsonByMobile(myUrl: String, mobile: String): JSONArray? {
+    suspend fun fetchFavoriteItemsJsonByMobile(myUrl: String, mobile: String): JSONArray? {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("${myUrl}read.php?user_mobile=$mobile")
@@ -160,7 +160,7 @@ object NetworkExerciseService {
         return withContext(Dispatchers.IO) {
             client.newCall(request).execute().use {response ->
                 val responseBody = response.body?.string()
-                Log.e("OKHTTP3/picklistfetch", "Success to execute request!: $responseBody")
+//                Log.e("OKHTTP3/picklistfetch", "Success to execute request!: $responseBody")
                 val jsonObj__ = responseBody?.let { JSONObject(it) }
                 val jsonArray = try {
                     jsonObj__?.getJSONArray("data")
@@ -171,7 +171,7 @@ object NetworkExerciseService {
             }
         }
     }
-    suspend fun fetchPickItemJsonBySn(myUrl: String, sn: String): JSONObject? {
+    suspend fun fetchFavoriteItemJsonBySn(myUrl: String, sn: String): JSONObject? {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("${myUrl}read.php?favorite_sn=$sn")
@@ -221,10 +221,10 @@ object NetworkExerciseService {
         Log.w("exerciseUnits", "$exerciseUnits")
         val jsonObj_ = json.optJSONObject("favorite info")
         return PickItemVO(
-            pickSn = jsonObj_!!.optInt("favorite_sn"),
-            pickName = jsonObj_.optString("favorite_name"),
-            pickExplainTitle = jsonObj_.optString("favorite_description"),
-            pickExplain = jsonObj_.optString("favorite_description"),
+            favoriteSn = jsonObj_!!.optInt("favorite_sn"),
+            favoriteName = jsonObj_.optString("favorite_name"),
+            favoriteExplain = jsonObj_.optString("favorite_description"),
+            favoriteExplainTitle = jsonObj_.optString("favorite_description"),
             exercises = exerciseUnits
         )
     }

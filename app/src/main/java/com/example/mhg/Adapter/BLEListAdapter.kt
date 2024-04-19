@@ -2,6 +2,8 @@ package com.example.mhg.Adapter
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.content.ContentValues
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,55 +11,51 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mhg.R
-import com.example.mhg.databinding.RvBleListBinding
+import com.example.mhg.ReportGoalFragment
 
-class BLEListAdapter(private val onDeviceClick: (BluetoothDevice) -> Unit
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
-    var devices = mutableListOf<BluetoothDevice>()
-    inner class viewHolder(view: View): RecyclerView.ViewHolder(view) {
-        val tvBtName = view.findViewById<TextView>(R.id.tvBtName)
-        val tvBtAddress = view.findViewById<TextView>(R.id.tvBtAddress)
-        val clBle = view.findViewById<ConstraintLayout>(R.id.clBle)
-        val tvBleSearched = view.findViewById<TextView>(R.id.tvBleSearched)
-        val tvBleConnected = view.findViewById<TextView>(R.id.tvBleConnected)
-    }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        val binding = RvBleListBinding.inflate(inflater, parent, false)
-        return viewHolder(binding.root)
-    }
+class BLEListAdapter(private val deviceList: List<ReportGoalFragment.BluetoothDeviceInfo>, private val listener:onDeviceClickListener) :
+        RecyclerView.Adapter<BLEListAdapter.ViewHolder>() {
+            interface onDeviceClickListener {
+                fun onDeviceClick(device: ReportGoalFragment.BluetoothDeviceInfo)
+                fun onDeviceLongClick(device: ReportGoalFragment.BluetoothDeviceInfo) : Boolean
+            }
+    inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
+        var tv_device_name: TextView = v.findViewById(R.id.tvBtName)
+        var tv_mac_address: TextView = v.findViewById(R.id.tvBtAddress)
+        var tv_rssi: TextView = v.findViewById(R.id.tvBleSearched)
 
-    @SuppressLint("MissingPermission")
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val currentItem = devices[position]
-
-        if (holder is viewHolder) {
-            holder.tvBleConnected.visibility = View.GONE
-            if (currentItem.name == null) {
-                holder.tvBtAddress.text = currentItem.address.toString()
-                holder.clBle.setOnClickListener {
-                    onDeviceClick(currentItem)
-                }
-                holder.tvBtName.text = "N/A"
-            } else {
-                holder.tvBtName.text = currentItem.name.toString()
-                holder.tvBtAddress.text = currentItem.address.toString()
-                holder.clBle.setOnClickListener {
-                    onDeviceClick(currentItem)
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onDeviceClick(deviceList[position])
                 }
             }
-
-
+            itemView.setOnLongClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onDeviceLongClick(deviceList[position])
+                }
+                true
+            }
         }
     }
-    override fun getItemCount(): Int {
-        return devices.size
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BLEListAdapter.ViewHolder {
+        val v: View = LayoutInflater.from(parent.context)
+            .inflate(R.layout.rv_ble_list, parent, false)
+        return ViewHolder(v)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateDevices(device: Set<BluetoothDevice>) {
-        devices.clear()
-        devices.addAll(device)
-        notifyDataSetChanged()
+    override fun onBindViewHolder(holder: BLEListAdapter.ViewHolder, position: Int) {
+        val item = deviceList[position]
+        holder.tv_device_name.text = item.device_name
+        holder.tv_mac_address.text = item.mac_address
+        holder.tv_rssi.text = item.rssi
     }
+
+    override fun getItemCount(): Int {
+        return deviceList.size
+    }
+
 }

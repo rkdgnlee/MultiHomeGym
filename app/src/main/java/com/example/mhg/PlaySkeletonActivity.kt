@@ -9,9 +9,11 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -21,7 +23,10 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
+import com.example.mhg.VO.SkeletonViewModel
 import com.example.mhg.databinding.ActivityPlaySkeletonBinding
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -32,6 +37,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -39,9 +45,71 @@ class PlaySkeletonActivity : AppCompatActivity() {
     lateinit var binding : ActivityPlaySkeletonBinding
     private var simpleExoPlayer: SimpleExoPlayer? = null
     private var player : SimpleExoPlayer? = null
-
     private var playbackPosition = 0L
     private lateinit var cameraExecutor: ExecutorService
+
+    // ------! POSE LANDMARKER 설정 시작 !------
+    companion object {
+        private const val TAG = "Pose Landmarker"
+        private const val REQUEST_CODE_PERMISSIONS = 10
+        private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
+    }
+    private var _fragmentCameraBinding: ActivityPlaySkeletonBinding? = null
+
+    private val fragmentCameraBinding
+        get() = _fragmentCameraBinding!!
+    private lateinit var poseLandmarkerHelper: PoseLandmarkerHelper
+    private val viewModel: SkeletonViewModel by viewModels()
+    private var preview: Preview? = null
+    private var imageAnalyzer: ImageAnalysis? = null
+    private var camera: Camera? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var cameraFacing = CameraSelector.LENS_FACING_BACK
+    private lateinit var backgroundExecutor: ExecutorService
+
+//    override fun onResume() {
+//        super.onResume()
+//        // Make sure that all permissions are still present, since the
+//        // user could have removed them while the app was in paused state.
+//        if (!PermissionsFragment.hasPermissions(requireContext())) {
+//            Navigation.findNavController(
+//                requireActivity(), R.id.fragment_container
+//            ).navigate(R.id.action_camera_to_permissions)
+//        }
+//
+//        // Start the PoseLandmarkerHelper again when users come back
+//        // to the foreground.
+//        backgroundExecutor.execute {
+//            if(this::poseLandmarkerHelper.isInitialized) {
+//                if (poseLandmarkerHelper.isClose()) {
+//                    poseLandmarkerHelper.setupPoseLandmarker()
+//                }
+//            }
+//        }
+//    }
+//    override fun onPause() {
+//        super.onPause()
+//        if(this::poseLandmarkerHelper.isInitialized) {
+//            viewModel.setMinPoseDetectionConfidence(poseLandmarkerHelper.minPoseDetectionConfidence)
+//            viewModel.setMinPoseTrackingConfidence(poseLandmarkerHelper.minPoseTrackingConfidence)
+//            viewModel.setMinPosePresenceConfidence(poseLandmarkerHelper.minPosePresenceConfidence)
+//            viewModel.setDelegate(poseLandmarkerHelper.currentDelegate)
+//
+//            // Close the PoseLandmarkerHelper and release resources
+//            backgroundExecutor.execute { poseLandmarkerHelper.clearPoseLandmarker() }
+//        }
+//    }
+//    override fun onDestroyView() {
+//        _fragmentCameraBinding = null
+//        super.onDestroyView()
+//
+//        // Shut down our background executor
+//        backgroundExecutor.shutdown()
+//        backgroundExecutor.awaitTermination(
+//            Long.MAX_VALUE, TimeUnit.NANOSECONDS
+//        )
+//    }
+    // ------! POSE LANDMARKER 설정 끝 !------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -111,7 +179,7 @@ class PlaySkeletonActivity : AppCompatActivity() {
     }
     private fun startCamera() {
         var cameraController =  LifecycleCameraController(baseContext)
-        val preview : PreviewView = binding.previewView
+        val preview : PreviewView = binding.viewFinder
         val cameraSelector = CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
             .build()
@@ -127,7 +195,7 @@ class PlaySkeletonActivity : AppCompatActivity() {
 //            MlKitAnalyzer()
 //        )
         cameraController.bindToLifecycle(this)
-        binding.previewView.controller = cameraController
+        binding.viewFinder.controller = cameraController
 
     }
 
@@ -136,12 +204,7 @@ class PlaySkeletonActivity : AppCompatActivity() {
             baseContext, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     }
 
-    companion object {
-//        private const val TAG = "CameraXApp"
-//        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
-        private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
-    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

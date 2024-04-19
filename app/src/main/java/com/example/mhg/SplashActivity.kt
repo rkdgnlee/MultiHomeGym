@@ -122,7 +122,6 @@ class SplashActivity : AppCompatActivity() {
             if (naverTokenExist == NidOAuthLoginState.OK) {
                 Log.e("네이버 로그인", "$naverTokenExist")
                 val naverToken = NaverIdLoginSDK.getAccessToken()
-                Log.e("네이버토큰", "$naverToken")
                 val url = "https://openapi.naver.com/v1/nid/me"
                 val request = Request.Builder()
                     .url(url)
@@ -145,10 +144,12 @@ class SplashActivity : AppCompatActivity() {
                             // -----! 전화번호 변환 !-----
                             val encodedNaverMobile = URLEncoder.encode(naverMobile, "UTF-8")
                             if (naverMobile != null) {
-                                // TODO INSERT 정상작동 시, SINGLETON은 DB에서 값 받아온 후에 넣기. (네이버 카카오 동일)
-                                NetworkUserService.StoreUserInSingleton(this@SplashActivity, jsonObj)
-                                Log.e("Spl네이버>싱글톤", "${Singleton_t_user.getInstance(this@SplashActivity).jsonObject}")
-                                fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), encodedNaverMobile, false) {
+
+                                fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), encodedNaverMobile, false) { jsonObject ->
+                                    if (jsonObject != null) {
+                                        NetworkUserService.StoreUserInSingleton(this@SplashActivity, jsonObject)
+                                        Log.e("Spl네이버>싱글톤", "${Singleton_t_user.getInstance(this@SplashActivity).jsonObject}")
+                                    }
                                     MainInit()
                                 }
                             }
@@ -164,9 +165,12 @@ class SplashActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val JsonObj = JSONObject()
-                            // TODO INSERT 정상 작동 시, google만 따로, db에서 가져와서 singleton에 담기
                             JsonObj.put("google_login_id", user.uid)
-                            fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.getString("google_login_id"), true) {
+                            fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), JsonObj.getString("google_login_id"), true) {jsonObject ->
+                                if (jsonObject != null) {
+                                    NetworkUserService.StoreUserInSingleton(this, jsonObject)
+                                    Log.e("Spl구글>싱글톤", "${Singleton_t_user.getInstance(this@SplashActivity).jsonObject}")
+                                }
                                 MainInit()
                             }
                         }
@@ -195,11 +199,15 @@ class SplashActivity : AppCompatActivity() {
                         JsonObj.put("user_birthday", user.kakaoAccount?.birthyear.toString() + "-" + user.kakaoAccount?.birthday?.substring(0..1) + "-" + user.kakaoAccount?.birthday?.substring(2))
                         JsonObj.put("kakao_login_id" , user.id.toString())
                         Log.w("$TAG, Spl카카오회원가입", JsonObj.getString("user_mobile"))
-                        NetworkUserService.StoreUserInSingleton(this, JsonObj)
-                        Log.e("Spl카카오>싱글톤", "${Singleton_t_user.getInstance(this).jsonObject}")
+
+
                         val encodedKakaoMobile = URLEncoder.encode(kakaoMobile, "UTF-8")
 
-                        fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), encodedKakaoMobile, false) {
+                        fetchSELECTJson(getString(R.string.IP_ADDRESS_t_user), encodedKakaoMobile, false) {jsonObject ->
+                            if (jsonObject != null) {
+                                NetworkUserService.StoreUserInSingleton(this, jsonObject)
+                                Log.e("Spl카카오>싱글톤", "${Singleton_t_user.getInstance(this).jsonObject}")
+                            }
                             MainInit()
                         }
                     }
@@ -285,7 +293,10 @@ class SplashActivity : AppCompatActivity() {
     }
     // ----- 알림에 대한 함수들 끝 -----
 
-    fun fetchSELECTJson(myUrl : String, identifier:String, isGoogleId: Boolean ,callback: () -> Unit){
+    fun fetchSELECTJson(
+        myUrl: String, identifier:String, isGoogleId: Boolean,
+        callback: (JSONObject?) -> Unit
+    ){
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(if (isGoogleId) "${myUrl}read.php?google_login_id=$identifier" else "${myUrl}read.php?user_mobile=$identifier")
@@ -298,12 +309,9 @@ class SplashActivity : AppCompatActivity() {
             }
             override fun onResponse(call: Call, response: Response)  {
                 val responseBody = response.body?.string()
+                Log.e("$TAG, 응답성공", "$responseBody")
                 val jsonObj__ = responseBody?.let { JSONObject(it) }
-                val jsonObj = jsonObj__?.optJSONObject("data")
-//                val t_userInstance =  Singleton_t_user.getInstance(baseContext)
-//                t_userInstance.jsonObject = jsonObj
-//                Log.e("OKHTTP3>싱글톤", "${t_userInstance.jsonObject}")
-                callback()
+                callback(jsonObj__)
             }
         })
     }
