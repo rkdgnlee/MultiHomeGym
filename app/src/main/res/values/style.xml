@@ -98,5 +98,12 @@
         <!-- Customize text field of the text input mode. -->
     </style>
 
+<!--pose landmarker-->
+    <style name="BottomSheetSpinnerItemStyle" parent="Widget.AppCompat.Light.DropDownItem.Spinner">
+        <item name="android:textSize">@dimen/bottom_sheet_text_size</item>
+    </style>
 
+    <style name="AppThemeProgressStyle">
+        <item name="colorAccent">@color/mp_color_primary_variant</item>
+    </style>
 </resources>

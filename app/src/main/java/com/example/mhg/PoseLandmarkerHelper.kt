@@ -32,11 +32,18 @@ class PoseLandmarkerHelper(
     // 포즈 랜드마크가 변경되지 않으면 lazy 값이 더 좋습니다.
     private var poseLandmarker: PoseLandmarker? = null
 
+    init {
+        setupPoseLandmarker()
+    }
+    fun clearPoseLandmarker() {
+        poseLandmarker?.close()
+        poseLandmarker = null
+    }
+
     // PoseLandmarkerHelper의 실행 상태를 반환합니다.
     fun isClose(): Boolean {
         return poseLandmarker == null
     }
-
     // 현재 설정을 사용하여 포즈 랜드마크를 초기화합니다.
     // 그것을 사용하고 있는 스레드. CPU는 Landmarker와 함께 사용할 수 있습니다.
     // 메인 스레드에서 생성되어 백그라운드 스레드에서 사용되지만
@@ -195,22 +202,24 @@ class PoseLandmarkerHelper(
             )
         }
 
-        // Inference time is the difference between the system time at the start and finish of the
-        // process
+        // 추론 시간은 시작과 끝의 시스템 시간의 차이입니다.
+        // 프로세스
         val startTime = SystemClock.uptimeMillis()
 
         var didErrorOccurred = false
 
-        // Load frames from the video and run the pose landmarker.
+
+        // 비디오에서 프레임을 로드하고 포즈 랜드마크를 실행합니다.
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(context, videoUri)
         val videoLengthMs =
             retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 ?.toLong()
 
-        // Note: We need to read width/height from frame instead of getting the width/height
-        // of the video directly because MediaRetriever returns frames that are smaller than the
-        // actual dimension of the video file.
+
+        // 참고: 너비/높이를 가져오는 대신 프레임에서 너비/높이를 읽어야 합니다.
+        // MediaRetriever가
+        // 비디오 파일의 실제 크기입니다.
         val firstFrame = retriever.getFrameAtTime(0)
         val width = firstFrame?.width
         val height = firstFrame?.height
