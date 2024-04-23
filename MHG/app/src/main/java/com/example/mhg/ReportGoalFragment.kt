@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mhg.Adapter.BLEListAdapter
 import com.example.mhg.VO.BLEViewModel
 import com.example.mhg.databinding.FragmentReportGoalBinding
+import com.example.mhg.`object`.Singleton_bt_device
 import com.example.mhg.`object`.CommonDefines
 import com.example.mhg.`object`.TedPermissionWrapper
 import com.example.mhg.service.BluetoothLeService
@@ -49,12 +50,13 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
     private var mScanning = false
     private var mHandler: Handler? = null
     private  val SCAN_PERIOD: Long = 5000
-
+    lateinit var singleton_bt_device : Singleton_bt_device
     private val UART_PROFILE_CONNECTED = 20
     private  val UART_PROFILE_DISCONNECTED = 21
     var mState = UART_PROFILE_DISCONNECTED
     var mService: BluetoothLeService? = null
     val adapter = BLEListAdapter(mDeviceInfoList, this)
+
 
     // variables
     private var mRealtimeOrWrite: Byte = 0x00 // 0x01: realtime, 0x00: write
@@ -72,23 +74,25 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
     @SuppressLint("MissingPermission", "NotifyDataSetChanged", "SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.w("init", "${viewModel.init}")
-        mHandler = Handler()
 
+        // ------------------------! 싱글턴에서 가져오기 !--------------------------
+        singleton_bt_device = Singleton_bt_device.getInstance(requireContext())
+
+        mHandler = Handler()
+        Log.w("init", "${singleton_bt_device.init}")
         TedPermissionWrapper.checkPermission(requireContext())
-        viewModel.mBtAdapter = BluetoothAdapter.getDefaultAdapter()
-        mBtAdapter = viewModel.mBtAdapter // bluetoothadapter는 남아있음. mService
+        mBtAdapter = singleton_bt_device.mBtAdapter // bluetoothadapter는 남아있음. mService
         if (mBtAdapter == null) {
             Toast.makeText(requireContext(), "Bluetooth is not avaliable", Toast.LENGTH_LONG).show()
             return
         }
 //        mDeviceList = ArrayList()
-        viewModel.mDeviceList.value = arrayListOf()
-        if (viewModel.init == false) {
+        singleton_bt_device.mDeviceList.value = arrayListOf()
+        if (singleton_bt_device.init == false) {
 //            control_init()
             service_init()
             Log.w("serviceInit", "serviceInit Success !")
-            viewModel.init = true
+            singleton_bt_device.init = true
         }
         if (!mBtAdapter!!.isEnabled()) {
             Log.i(TAG, "BT not enabled yet")
@@ -109,6 +113,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
             clearDevice()
             scanLeDevice(false)
             scanLeDevice(true)
+            binding.rvDeviceList.visibility= View.VISIBLE
         }
         binding.btnConnect.setOnClickListener {
             if (mState == UART_PROFILE_DISCONNECTED) {
@@ -117,6 +122,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                         scanLeDevice(false)
                         binding.btnConnect.setEnabled(false)
                         binding.btnDisconnect.setEnabled(true)
+                        binding.rvDeviceList.visibility = View.GONE
                     }
                 } catch (ex: Exception) {
                     Log.e(TAG, ex.toString())
@@ -132,8 +138,10 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                 mService?.disconnect()
             }
         }
+
+        // -------------------------------! 연결 후 데이터 교환 시작 !-------------------------------
         binding.btnSend.setOnClickListener {
-            if (viewModel.mDevice != null && mState == UART_PROFILE_CONNECTED) {
+            if (singleton_bt_device.mDevice != null && mState == UART_PROFILE_CONNECTED) {
                 val send_data: String = binding.etSendData.getText().toString()
                 val buf = send_data.toByteArray()
                 Log.d(TAG, "[send data - str] $send_data")
@@ -149,7 +157,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
             }
         }
         binding.btnSendGetCount.setOnClickListener {
-            if (viewModel.mDevice != null && mState == UART_PROFILE_CONNECTED) {
+            if (singleton_bt_device.mDevice != null && mState == UART_PROFILE_CONNECTED) {
                 val curTime = System.currentTimeMillis()
                 mPreTime = curTime
                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
@@ -159,6 +167,34 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                 Log.d(TAG, strTemp)
                 val buf = byteArrayOf(0x82.toByte(), 0x0D.toByte(), 0x0A.toByte())
                 strTemp = ""
+                var i = 0
+                while (i < buf.size) {
+                    strTemp += String.format("%02X ", buf[i])
+                    i++
+                }
+                Log.d(TAG, "[send data - byte] $strTemp")
+                binding.tvRecvData.append("[send] $strTemp\r\n")
+                mService?.writeRxCharacteristic(buf)
+            }
+        }
+        binding.btnSendSyncAck.setOnClickListener {
+            if (mDevice != null && mState == UART_PROFILE_CONNECTED) {
+                val buf = byteArrayOf(0x84.toByte(), 0x0D.toByte(), 0x0A.toByte())
+                var strTemp = ""
+                var i = 0
+                while (i < buf.size) {
+                    strTemp += String.format("%02X ", buf[i])
+                    i++
+                }
+                Log.d(TAG, "[send data - byte] $strTemp")
+                binding.tvRecvData.append("[send] $strTemp\r\n")
+                mService?.writeRxCharacteristic(buf)
+            }
+        }
+        binding.btnSendSyncStart.setOnClickListener {
+            if (mDevice != null && mState == UART_PROFILE_CONNECTED) {
+                val buf = byteArrayOf(0x83.toByte(), 0x0D.toByte(), 0x0A.toByte())
+                var strTemp = ""
                 var i = 0
                 while (i < buf.size) {
                     strTemp += String.format("%02X ", buf[i])
@@ -229,14 +265,14 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
     @SuppressLint("MissingPermission")
     private fun addDevice(device: BluetoothDevice, rssi: Int) {
         var deviceFound = false
-        for (listDev in viewModel.mDeviceList.value!!) {
+        for (listDev in singleton_bt_device.mDeviceList.value!!) {
             if (listDev.getAddress() == device.getAddress()) {
                 deviceFound = true
                 break
             }
         }
         if (!deviceFound) {
-            viewModel.mDeviceList.value!!.add(device)
+            singleton_bt_device.mDeviceList.value!!.add(device)
             val deviceName = device.name ?: "N/A"
             val deviceAddress = device.address ?: "N/A"
             mDeviceInfoList.add(
@@ -252,11 +288,11 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
     }
 
     private fun clearDevice() {
-        if (viewModel.mDevice != null) {
-            viewModel.mDevice = null
+        if (singleton_bt_device.mDevice != null) {
+            singleton_bt_device.mDevice = null
         }
-        viewModel.mDeviceList.value?.clear()
-        viewModel.mDeviceInfoList.clear()
+        singleton_bt_device.mDeviceList.value?.clear()
+        singleton_bt_device.mDeviceInfoList.clear()
         adapter.notifyDataSetChanged()
     }
 
@@ -301,7 +337,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                 binding.btnConnect.setBackgroundColor(binding.btnConnect.resources.getColor(R.color.grey600))
                 binding.btnDisconnect.setEnabled(true)
                 binding.btnDisconnect.setBackgroundColor(binding.btnDisconnect.resources.getColor(R.color.mainColor))
-                viewModel.mDevice = mDevice
+                singleton_bt_device.mDevice = mDevice
 
             } else if (action == BluetoothLeService.ACTION_GATT_DISCONNECTED) {
                 Log.d(TAG, "UART Gatt Disconnected")
@@ -316,7 +352,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                     binding.btnDisconnect.setBackgroundColor(binding.btnDisconnect.resources.getColor(R.color.grey600))
 
                     mDevice = null
-                    viewModel.mDevice = null
+                    singleton_bt_device.mDevice = null
                     Toast.makeText(requireContext(), "연결 종료!", Toast.LENGTH_LONG).show()
                 })
 
@@ -324,8 +360,8 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                 mService?.enableTxNotification()
 
             } else if (action == BluetoothLeService.ACTION_DATA_AVAILABLE) {
-                viewModel.txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA)
-                val txValue = viewModel.txValue
+                singleton_bt_device.txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA)
+                val txValue = singleton_bt_device.txValue
                 requireActivity().runOnUiThread(Runnable {
                     try {
                         if (binding.tvRecvData.getLineCount() > 255) binding.tvRecvData.setText("")
@@ -337,18 +373,22 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
                         val date = Date(curTime)
                         val strTemp = "[ProcessTime] " + sdf.format(date) + "\r\n" +
                                 "\tResult Time: " + duringTime + "\r\n"
-                        //binding.tvRecvData.append(strTemp);
+                        binding.tvRecvData.append(strTemp);
                         Log.d("dataAvailable", strTemp)
                         val hexData = StringBuilder()
                         for (b in txValue) {
                             hexData.append(String.format("%02x ", b.toInt() and 0xFF))
                         }
-                        Log.d(
-                            TAG,
-                            String.format("RX Data(%d): %s", txValue.size, hexData.toString())
-                        )
+                        Log.d(TAG, String.format("RX Data(%d): %s", txValue.size, hexData.toString()))
+
+                        val decimalData = StringBuilder()
+                        for (b in txValue) {
+                            decimalData.append(String.format("%d ", b.toInt() and 0xFF))
+                        }
+                        Log.d(TAG, String.format("RX Data(%d): %s", txValue.size, decimalData.toString()))
 //                        if (cb_send_hex?.isChecked() == true)
                         binding.tvRecvData.append("[recv] $hexData\r\n")
+                        binding.tvRecvData.append("[recv] $decimalData\r\n")
 //                        else binding.tvRecvData!!.append(
 //                            "[recv] $recvData\r\n"
 //                        ) // + "\r\n");
@@ -644,6 +684,7 @@ class ReportGoalFragment : Fragment(), BLEListAdapter.onDeviceClickListener {
             else -> Log.e(TAG, "wrong requestCode")
         }
     }
+    @SuppressLint("SetTextI18n")
     override fun onDeviceClick(device: BluetoothDeviceInfo) {
         // 아이템 클릭 시 동작
         binding.tvDeviceName.setText("기기 이름: " + device.device_name)

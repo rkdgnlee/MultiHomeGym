@@ -32,9 +32,9 @@ class FeedbackActivity : AppCompatActivity() {
 //            override fun onAnimationRepeat(animation: Animator) {}
 //        })
 
-        setScore(binding.nsPain, binding.tvPainScore)
-        setScore(binding.nsIntensity, binding.tvIntensityScore)
-        setScore(binding.nsSatisfaction, binding.tvSatsfactionScore)
+//        setScore(binding.nsPain, binding.tvPainScore)
+//        setScore(binding.nsIntensity, binding.tvIntensityScore)
+//        setScore(binding.nsSatisfaction, binding.tvSatsfactionScore)
 
 
 
@@ -60,45 +60,45 @@ class FeedbackActivity : AppCompatActivity() {
         }
 
     }
-    private fun setScore(niftySlider: NiftySlider, textView: TextView) {
-        when (textView.id) {
-            R.id.tvPainScore -> {
-                niftySlider.addOnValueChangeListener { _, value, _ ->
-                    textView.text = when (value) {
-                        1.0F -> "통증이 전혀 없다"
-                        2.0F -> "통증이 거의 없다"
-                        3.0F -> "약간의 통증이 있다"
-                        4.0F -> "약간 심한 통증이 있다"
-                        5.0F -> "통증이 상당히 심하다"
-                        else -> { "error" }
-                    }
-                }
-            }
-            R.id.tvIntensityScore -> {
-                niftySlider.addOnValueChangeListener{_ , value, _ ->
-                    textView.text = when (value) {
-                        1.0f -> "전혀 힘들지 않다"
-                        2.0f -> "힘들지 않다"
-                        3.0f -> "보통이다"
-                        4.0f -> "힘들다"
-                        5.0f -> "매우 힘들다"
-                        else -> { "error" }
-                    }
-                }
-            }
-            R.id.tvSatsfactionScore -> {
-                niftySlider.addOnValueChangeListener{_ , value, _ ->
-                    textView.text = when (value) {
-                        1.0f -> "전혀 만족스럽지 않다"
-                        2.0f -> "만족스럽지 않다"
-                        3.0f -> "보통이다"
-                        4.0f -> "만족스럽다"
-                        5.0f -> "매우 만족스럽다"
-                        else -> { "error" }
-                    }
-                }
-            }
-        }
-
-    }
+//    private fun setScore(niftySlider: NiftySlider, textView: TextView) {
+//        when (textView.id) {
+//            R.id.tvPainScore -> {
+//                niftySlider.addOnValueChangeListener { _, value, _ ->
+//                    textView.text = when (value) {
+//                        1.0F -> "통증이 전혀 없다"
+//                        2.0F -> "통증이 거의 없다"
+//                        3.0F -> "약간의 통증이 있다"
+//                        4.0F -> "약간 심한 통증이 있다"
+//                        5.0F -> "통증이 상당히 심하다"
+//                        else -> { "error" }
+//                    }
+//                }
+//            }
+//            R.id.tvIntensityScore -> {
+//                niftySlider.addOnValueChangeListener{_ , value, _ ->
+//                    textView.text = when (value) {
+//                        1.0f -> "전혀 힘들지 않다"
+//                        2.0f -> "힘들지 않다"
+//                        3.0f -> "보통이다"
+//                        4.0f -> "힘들다"
+//                        5.0f -> "매우 힘들다"
+//                        else -> { "error" }
+//                    }
+//                }
+//            }
+//            R.id.tvSatsfactionScore -> {
+//                niftySlider.addOnValueChangeListener{_ , value, _ ->
+//                    textView.text = when (value) {
+//                        1.0f -> "전혀 만족스럽지 않다"
+//                        2.0f -> "만족스럽지 않다"
+//                        3.0f -> "보통이다"
+//                        4.0f -> "만족스럽다"
+//                        5.0f -> "매우 만족스럽다"
+//                        else -> { "error" }
+//                    }
+//                }
+//            }
+//        }
+//
+//    }
 }

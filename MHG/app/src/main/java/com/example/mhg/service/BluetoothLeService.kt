@@ -144,7 +144,7 @@ class BluetoothLeService : Service() {
             Log.w(TAG, "Device not found. Unable to connect")
             return false
         }
-        mBluetoothGatt = device.connectGatt(this, false, mGattCallback)
+        mBluetoothGatt = device.connectGatt(this, true, mGattCallback)
         Log.d(TAG, "Trying to create a new connection")
         mBluetoothDeviceAddress = address
         mConnectionState = STATE_CONNECTING

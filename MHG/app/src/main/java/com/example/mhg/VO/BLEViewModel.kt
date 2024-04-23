@@ -7,12 +7,12 @@ import androidx.lifecycle.ViewModel
 import com.example.mhg.ReportGoalFragment
 
 class BLEViewModel : ViewModel() {
-    var init = false
-    var mBtAdapter : BluetoothAdapter? = null
-    var mDevice : BluetoothDevice? = null
-    var mDeviceList : MutableLiveData<ArrayList<BluetoothDevice>> = MutableLiveData()
-    var mDeviceInfoList : ArrayList<ReportGoalFragment.BluetoothDeviceInfo> = arrayListOf()
-    var txValue = byteArrayOf() ?: null
+//    var init = false
+//    var mBtAdapter : BluetoothAdapter? = null
+//    var mDevice : BluetoothDevice? = null
+//    var mDeviceList : MutableLiveData<ArrayList<BluetoothDevice>> = MutableLiveData()
+//    var mDeviceInfoList : ArrayList<ReportGoalFragment.BluetoothDeviceInfo> = arrayListOf()
+//    var txValue = byteArrayOf() ?: null
 //    var devices = MutableLiveData(mutableSetOf<BluetoothDevice>())
 //    var selectedDevice : MutableLiveData<BluetoothDevice?> = MutableLiveData()
 //    val gattServiceData: MutableList<HashMap<String, String>> = mutableListOf() // 서비스 목록
